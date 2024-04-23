@@ -5,7 +5,7 @@ This repository contains the code and the project for the [***IMM 2024 Hackathon
 - DC-DC Converter Control Algorithm using the provided digital PID regulator which will be executed by the Fast Control Loop
 # Workflow Process (Only for developers/contributors)
 This repository and the project itself are still in the proof of concept stage. Hence, there can be a lot of changes and issues. <br/>
-When you want to clone the repository ***ALWAYS*** clone the code inside the ***develop*** branch. <br/>
+When you want to clone the repository ***ALWAYS*** checkout the ***develop*** branch. After that you can pull the source code from the develop branch. <br/>
 Create a local branch to work on your changes. You can commit as much as you want in your local branch. <br/>
 When you want to deliver your changes, you need to publish your local branch and create a pull request. In the pull request, it is suggested that you check the checkboxes about deleting the source branch and squashing the branch commits.<br/>
 Our goal is to maintain the repository in such way that it always has the following branches:
