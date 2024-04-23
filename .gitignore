@@ -50,3 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/src/.metadata
+/src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer/.settings
+src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer/Readme.txt
+src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer/solver.log
