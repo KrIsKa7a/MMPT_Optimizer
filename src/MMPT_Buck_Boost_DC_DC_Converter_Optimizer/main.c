@@ -147,7 +147,13 @@ void ISR_voltage_control_loop()
   /* Enabling shadow transfer */
   PWM_CCU8_0.ccu8_module_ptr->GCSS= 0x1;
 
-  //volatile uint16_t result = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+  volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+  volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+
+}
+
+void ISR_adc_measurement_adv_callback()
+{
 
 }
 

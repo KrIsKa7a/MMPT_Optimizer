@@ -61,10 +61,10 @@
 #include "GLOBAL_ADC/global_adc.h"
   
 
-#include "ADC_MEASUREMENT_ADV/adc_measurement_adv.h"
+#include "CPU_CTRL_XMC1/cpu_ctrl_xmc1.h"
   
 
-#include "CPU_CTRL_XMC1/cpu_ctrl_xmc1.h"
+#include "ADC_MEASUREMENT_ADV/adc_measurement_adv.h"
   
 
 #include "INTERRUPT/interrupt.h"

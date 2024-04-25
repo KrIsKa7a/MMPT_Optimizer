@@ -87,6 +87,8 @@
  * EXTERN DECLARATIONS
  ***********************************************************************************************************************/
 
+ /*Callback function for the instance ADC_MEASUREMENT_ADV_0*/ 
+extern void ISR_adc_measurement_adv_callback(void); 
 
 /**********************************************************************************************************************
 * DATA STRUCTURES
@@ -98,8 +100,17 @@
 static void ADC_MEASUREMENT_ADV_0_event_config(void)
 {
 
-	/* Result Event Node Mux Configuration for Vout (Group-1 channel-0 Result_Register-10)*/
+	/* Result Event Node Mux Configuration for Vout (Group-1 channel-5 Result_Register-10)*/
 	XMC_VADC_GROUP_SetResultInterruptNode(VADC_G1, 10U, XMC_VADC_SR_SHARED_SR0);
+
+	/* Result Event Node Mux Configuration for Vin (Group-1 channel-1 Result_Register-11)*/
+	XMC_VADC_GROUP_SetResultInterruptNode(VADC_G1, 11U, XMC_VADC_SR_GROUP_SR0);
+
+	/* Result Event Node Mux Configuration for Iinductor (Group-1 channel-0 Result_Register-12)*/
+	XMC_VADC_GROUP_SetResultInterruptNode(VADC_G1, 12U, XMC_VADC_SR_GROUP_SR0);
+
+	/* Result Event Node Mux Configuration for Iin (Group-1 channel-7 Result_Register-13)*/
+	XMC_VADC_GROUP_SetResultInterruptNode(VADC_G1, 13U, XMC_VADC_SR_GROUP_SR0);
 
 }
 
@@ -120,7 +131,7 @@ static const XMC_VADC_CHANNEL_CONFIG_t  ADC_MEASUREMENT_ADV_0_Vout_ch_config =
   .broken_wire_detect         = (uint32_t) false,                     /* No Broken wire detection*/
   .bfl                        = (uint32_t) 0,                            /* No Boundary flag */
   .channel_priority           = (uint32_t) true,                      /* Highest Priority: 1 selected*/
-  .alias_channel              = (int8_t) XMC_VADC_CHANNEL_ALIAS_CH5  /* Channel is Aliased*/
+  .alias_channel              = (int8_t) XMC_VADC_CHANNEL_ALIAS_DISABLED,   /* ALIAS is Disabled*/
 };
 
 
@@ -137,10 +148,130 @@ static const XMC_VADC_RESULT_CONFIG_t ADC_MEASUREMENT_ADV_0_Vout_res_config =
 /* Vout ADC channel Handle */
 const ADC_MEASUREMENT_ADV_CHANNEL_t ADC_MEASUREMENT_ADV_0_Vout_handle =
 {
-  .ch_num        = (uint8_t) 0,
+  .ch_num        = (uint8_t) 5,
   .group_index   = (uint8_t) 1,
   .ch_handle     = (XMC_VADC_CHANNEL_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Vout_ch_config,
   .res_handle[0] = (XMC_VADC_RESULT_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Vout_res_config,   
+};
+
+
+
+/********************************* Vin ADC Channel configuration structure ********************************/
+static const XMC_VADC_CHANNEL_CONFIG_t  ADC_MEASUREMENT_ADV_0_Vin_ch_config =
+{
+  .input_class                = (uint32_t) XMC_VADC_CHANNEL_CONV_GROUP_CLASS0,
+  .lower_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .upper_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .event_gen_criteria         = (uint32_t) XMC_VADC_CHANNEL_EVGEN_NEVER,
+  .sync_conversion            = (uint32_t) false,                            /* Sync feature disabled*/
+  .alternate_reference        = (uint32_t) XMC_VADC_CHANNEL_REF_INTREF,  /* Internal reference selected */
+  .result_reg_number          = (uint32_t) 11,                           /* GxRES[11] selected */
+  .result_alignment           = (uint32_t) XMC_VADC_RESULT_ALIGN_RIGHT,  /* Result alignment - Right Aligned*/
+  .broken_wire_detect_channel = (uint32_t) XMC_VADC_CHANNEL_BWDCH_VAGND, /* No Broken wire mode select*/
+  .broken_wire_detect         = (uint32_t) false,                     /* No Broken wire detection*/
+  .bfl                        = (uint32_t) 0,                            /* No Boundary flag */
+  .channel_priority           = (uint32_t) true,                      /* Highest Priority: 1 selected*/
+  .alias_channel              = (int8_t) XMC_VADC_CHANNEL_ALIAS_CH2  /* Channel is Aliased*/
+};
+
+
+/*Vin Result configuration structure*/
+static const XMC_VADC_RESULT_CONFIG_t ADC_MEASUREMENT_ADV_0_Vin_res_config =
+{
+  .data_reduction_control  = (uint32_t) 0,
+  .post_processing_mode    = (uint32_t) XMC_VADC_DMM_REDUCTION_MODE,
+  .wait_for_read_mode      = (uint32_t) false,
+  .part_of_fifo            = (uint32_t) false , /* No FIFO */
+  .event_gen_enable        = (uint32_t) true   /* Result event Enabled*/
+};
+
+/* Vin ADC channel Handle */
+const ADC_MEASUREMENT_ADV_CHANNEL_t ADC_MEASUREMENT_ADV_0_Vin_handle =
+{
+  .ch_num        = (uint8_t) 1,
+  .group_index   = (uint8_t) 1,
+  .ch_handle     = (XMC_VADC_CHANNEL_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Vin_ch_config,
+  .res_handle[0] = (XMC_VADC_RESULT_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Vin_res_config,   
+};
+
+
+
+/********************************* Iinductor ADC Channel configuration structure ********************************/
+static const XMC_VADC_CHANNEL_CONFIG_t  ADC_MEASUREMENT_ADV_0_Iinductor_ch_config =
+{
+  .input_class                = (uint32_t) XMC_VADC_CHANNEL_CONV_GROUP_CLASS0,
+  .lower_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .upper_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .event_gen_criteria         = (uint32_t) XMC_VADC_CHANNEL_EVGEN_NEVER,
+  .sync_conversion            = (uint32_t) false,                            /* Sync feature disabled*/
+  .alternate_reference        = (uint32_t) XMC_VADC_CHANNEL_REF_INTREF,  /* Internal reference selected */
+  .result_reg_number          = (uint32_t) 12,                           /* GxRES[12] selected */
+  .result_alignment           = (uint32_t) XMC_VADC_RESULT_ALIGN_RIGHT,  /* Result alignment - Right Aligned*/
+  .broken_wire_detect_channel = (uint32_t) XMC_VADC_CHANNEL_BWDCH_VAGND, /* No Broken wire mode select*/
+  .broken_wire_detect         = (uint32_t) false,                     /* No Broken wire detection*/
+  .bfl                        = (uint32_t) 0,                            /* No Boundary flag */
+  .channel_priority           = (uint32_t) true,                      /* Highest Priority: 1 selected*/
+  .alias_channel              = (int8_t) XMC_VADC_CHANNEL_ALIAS_CH6  /* Channel is Aliased*/
+};
+
+
+/*Iinductor Result configuration structure*/
+static const XMC_VADC_RESULT_CONFIG_t ADC_MEASUREMENT_ADV_0_Iinductor_res_config =
+{
+  .data_reduction_control  = (uint32_t) 0,
+  .post_processing_mode    = (uint32_t) XMC_VADC_DMM_REDUCTION_MODE,
+  .wait_for_read_mode      = (uint32_t) false,
+  .part_of_fifo            = (uint32_t) false , /* No FIFO */
+  .event_gen_enable        = (uint32_t) true   /* Result event Enabled*/
+};
+
+/* Iinductor ADC channel Handle */
+const ADC_MEASUREMENT_ADV_CHANNEL_t ADC_MEASUREMENT_ADV_0_Iinductor_handle =
+{
+  .ch_num        = (uint8_t) 0,
+  .group_index   = (uint8_t) 1,
+  .ch_handle     = (XMC_VADC_CHANNEL_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Iinductor_ch_config,
+  .res_handle[0] = (XMC_VADC_RESULT_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Iinductor_res_config,   
+};
+
+
+
+/********************************* Iin ADC Channel configuration structure ********************************/
+static const XMC_VADC_CHANNEL_CONFIG_t  ADC_MEASUREMENT_ADV_0_Iin_ch_config =
+{
+  .input_class                = (uint32_t) XMC_VADC_CHANNEL_CONV_GROUP_CLASS0,
+  .lower_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .upper_boundary_select      = (uint32_t) XMC_VADC_CHANNEL_BOUNDARY_GROUP_BOUND0,
+  .event_gen_criteria         = (uint32_t) XMC_VADC_CHANNEL_EVGEN_NEVER,
+  .sync_conversion            = (uint32_t) false,                            /* Sync feature disabled*/
+  .alternate_reference        = (uint32_t) XMC_VADC_CHANNEL_REF_INTREF,  /* Internal reference selected */
+  .result_reg_number          = (uint32_t) 13,                           /* GxRES[13] selected */
+  .result_alignment           = (uint32_t) XMC_VADC_RESULT_ALIGN_RIGHT,  /* Result alignment - Right Aligned*/
+  .broken_wire_detect_channel = (uint32_t) XMC_VADC_CHANNEL_BWDCH_VAGND, /* No Broken wire mode select*/
+  .broken_wire_detect         = (uint32_t) false,                     /* No Broken wire detection*/
+  .bfl                        = (uint32_t) 0,                            /* No Boundary flag */
+  .channel_priority           = (uint32_t) true,                      /* Highest Priority: 1 selected*/
+  .alias_channel              = (int8_t) XMC_VADC_CHANNEL_ALIAS_DISABLED,   /* ALIAS is Disabled*/
+};
+
+
+/*Iin Result configuration structure*/
+static const XMC_VADC_RESULT_CONFIG_t ADC_MEASUREMENT_ADV_0_Iin_res_config =
+{
+  .data_reduction_control  = (uint32_t) 0,
+  .post_processing_mode    = (uint32_t) XMC_VADC_DMM_REDUCTION_MODE,
+  .wait_for_read_mode      = (uint32_t) false,
+  .part_of_fifo            = (uint32_t) false , /* No FIFO */
+  .event_gen_enable        = (uint32_t) true   /* Result event Enabled*/
+};
+
+/* Iin ADC channel Handle */
+const ADC_MEASUREMENT_ADV_CHANNEL_t ADC_MEASUREMENT_ADV_0_Iin_handle =
+{
+  .ch_num        = (uint8_t) 7,
+  .group_index   = (uint8_t) 1,
+  .ch_handle     = (XMC_VADC_CHANNEL_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Iin_ch_config,
+  .res_handle[0] = (XMC_VADC_RESULT_CONFIG_t*) &ADC_MEASUREMENT_ADV_0_Iin_res_config,   
 };
 
 
@@ -157,9 +288,9 @@ static const XMC_VADC_QUEUE_CONFIG_t ADC_MEASUREMENT_ADV_0_queue_config = {
 static const ADC_MEASUREMENT_ADV_QUEUE_t ADC_MEASUREMENT_ADV_0_queue_handle =
 {
   .rs_intr_handle  = {
-					   .node_id          = (uint32_t) 0,
-					   .priority         = (uint32_t) 0,
-					   .interrupt_enable = (bool) false,
+					   .node_id          = (uint32_t) 16,
+					   .priority         = (uint32_t) 3,
+					   .interrupt_enable = (bool) true,
 					 },
   .iclass_config_handle = {
 							.sample_time_std_conv        = (uint32_t) 2,
@@ -169,13 +300,37 @@ static const ADC_MEASUREMENT_ADV_QUEUE_t ADC_MEASUREMENT_ADV_0_queue_handle =
 						  },
   .queue_config_handle = &ADC_MEASUREMENT_ADV_0_queue_config,
   .gating_mode  = XMC_VADC_GATEMODE_IGNORE,
-  .srv_req_node = XMC_VADC_SR_GROUP_SR0, /*Service Request line for Request source Event */
+  .srv_req_node = XMC_VADC_SR_SHARED_SR1, /*Service Request line for Request source Event */
   .iclass_num = 0
 };
  
 static const XMC_VADC_QUEUE_ENTRY_t ADC_MEASUREMENT_ADV_0_Vout_queue_entry_0 =
 {
+  .channel_num        = (uint8_t) 5,
+  .refill_needed      = (bool) true,
+  .generate_interrupt = (bool) false,
+  .external_trigger   = (bool) true,
+};
+
+static const XMC_VADC_QUEUE_ENTRY_t ADC_MEASUREMENT_ADV_0_Vin_queue_entry_1 =
+{
+  .channel_num        = (uint8_t) 1,
+  .refill_needed      = (bool) true,
+  .generate_interrupt = (bool) false,
+  .external_trigger   = (bool) true,
+};
+
+static const XMC_VADC_QUEUE_ENTRY_t ADC_MEASUREMENT_ADV_0_Iinductor_queue_entry_2 =
+{
   .channel_num        = (uint8_t) 0,
+  .refill_needed      = (bool) true,
+  .generate_interrupt = (bool) false,
+  .external_trigger   = (bool) true,
+};
+
+static const XMC_VADC_QUEUE_ENTRY_t ADC_MEASUREMENT_ADV_0_Iin_queue_entry_3 =
+{
+  .channel_num        = (uint8_t) 7,
   .refill_needed      = (bool) true,
   .generate_interrupt = (bool) false,
   .external_trigger   = (bool) true,
@@ -185,6 +340,9 @@ static const XMC_VADC_QUEUE_ENTRY_t ADC_MEASUREMENT_ADV_0_Vout_queue_entry_0 =
 static const XMC_VADC_QUEUE_ENTRY_t *ADC_MEASUREMENT_ADV_0_queue_entries[] =
 {
   (XMC_VADC_QUEUE_ENTRY_t*) (void *) &ADC_MEASUREMENT_ADV_0_Vout_queue_entry_0,
+  (XMC_VADC_QUEUE_ENTRY_t*) (void *) &ADC_MEASUREMENT_ADV_0_Vin_queue_entry_1,
+  (XMC_VADC_QUEUE_ENTRY_t*) (void *) &ADC_MEASUREMENT_ADV_0_Iinductor_queue_entry_2,
+  (XMC_VADC_QUEUE_ENTRY_t*) (void *) &ADC_MEASUREMENT_ADV_0_Iin_queue_entry_3,
 };
 
 
@@ -192,6 +350,9 @@ static const XMC_VADC_QUEUE_ENTRY_t *ADC_MEASUREMENT_ADV_0_queue_entries[] =
 static const ADC_MEASUREMENT_ADV_CHANNEL_t *ADC_MEASUREMENT_ADV_0_channel_array[] =
 {
   (ADC_MEASUREMENT_ADV_CHANNEL_t *) (void*) &ADC_MEASUREMENT_ADV_0_Vout_handle,
+  (ADC_MEASUREMENT_ADV_CHANNEL_t *) (void*) &ADC_MEASUREMENT_ADV_0_Vin_handle,
+  (ADC_MEASUREMENT_ADV_CHANNEL_t *) (void*) &ADC_MEASUREMENT_ADV_0_Iinductor_handle,
+  (ADC_MEASUREMENT_ADV_CHANNEL_t *) (void*) &ADC_MEASUREMENT_ADV_0_Iin_handle,
 
 };
 
@@ -206,8 +367,8 @@ const ADC_MEASUREMENT_ADV_t ADC_MEASUREMENT_ADV_0 =
   .init_state               = &ADC_MEASUREMENT_ADV_0_initialization_status,
   .req_src                  = ADC_MEASUREMENT_ADV_REQUEST_SOURCE_LOCAL_QUEUE,  
   .group_index              = (uint8_t) 1, 
-  .total_number_of_entries  = (uint8_t) 1,
-  .total_number_of_channels = (uint8_t) 1,
+  .total_number_of_entries  = (uint8_t) 4,
+  .total_number_of_channels = (uint8_t) 4,
   .start_at_initialization  = (bool) true  
 };
 

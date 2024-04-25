@@ -56,5 +56,15 @@
     <resourcesList name="signal_in" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/vadc0_c0_0_irqhandler"/>
   </provided>
   <provided xsi:type="ResourceModel:BitField" name="setena15" URI="http://resources/1.0.2/peripheral/cpu/0/iser/setena15" value="0" toolTipHelpDescription="Writing 0 to a SETENA bit has no effect, writing 1 to a bit enables the corresponding interrupt." defaultValue="0" startPos="15" stopPos="15" accessPermission="rw" maxValue="1" minValue="0"/>
+  <provided xsi:type="ResourceModel:ResourceGroup" name="VADC0_C0_1_IRQHandler" URI="http://resources/1.0.2/peripheral/cpu/0/nvic/interrupt/16">
+    <upwardMapList xsi:type="ResourceModel:HWResource" href="../../APPS/ADC_MEASUREMENT_ADV/v4_0_14/ADC_MEASUREMENT_ADV_0.app#//@hwResources.395"/>
+    <resourcesList name="iser_setena" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/iser/setena16"/>
+    <resourcesList name="icer_clrena" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/icer/clrena16"/>
+    <resourcesList name="ispr_setpend" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/ispr/setpend16"/>
+    <resourcesList name="icpr_clrpend" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/icpr/clrpend16"/>
+    <resourcesList name="ipr_pri" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/ipr4/pri_0"/>
+    <resourcesList name="signal_in" requiredResourceUri="http://resources/1.0.2/peripheral/cpu/0/vadc0_c0_1_irqhandler"/>
+  </provided>
+  <provided xsi:type="ResourceModel:BitField" name="setena16" URI="http://resources/1.0.2/peripheral/cpu/0/iser/setena16" value="0" toolTipHelpDescription="Writing 0 to a SETENA bit has no effect, writing 1 to a bit enables the corresponding interrupt." defaultValue="0" startPos="16" stopPos="16" accessPermission="rw" maxValue="1" minValue="0"/>
   <addressBlock offset="0x0" size="0x1000" usage="registers"/>
 </ResourceModel:Peripheral>

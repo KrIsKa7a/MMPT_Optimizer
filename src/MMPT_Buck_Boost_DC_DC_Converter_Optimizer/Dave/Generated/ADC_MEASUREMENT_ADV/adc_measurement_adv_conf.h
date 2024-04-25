@@ -122,8 +122,39 @@
 #define ADC_MEASUREMENT_ADV_0_Vout  (ADC_MEASUREMENT_ADV_0_Vout_handle)
 #define ADC_MEASUREMENT_ADV_0_Vout_RES  (VADC_G1->RES[10])
 
+#define ISR_adc_measurement_adv_callback IRQ_Hdlr_16
+#define ADC_MEASUREMENT_ADV_0_Vin  (ADC_MEASUREMENT_ADV_0_Vin_handle)
+#define ADC_MEASUREMENT_ADV_0_Vin_RES  (VADC_G1->RES[11])
+
+#define ISR_adc_measurement_adv_callback IRQ_Hdlr_16
+#define ADC_MEASUREMENT_ADV_0_Iinductor  (ADC_MEASUREMENT_ADV_0_Iinductor_handle)
+#define ADC_MEASUREMENT_ADV_0_Iinductor_RES  (VADC_G1->RES[12])
+
+#define ISR_adc_measurement_adv_callback IRQ_Hdlr_16
+#define ADC_MEASUREMENT_ADV_0_Iin  (ADC_MEASUREMENT_ADV_0_Iin_handle)
+#define ADC_MEASUREMENT_ADV_0_Iin_RES  (VADC_G1->RES[13])
+
+#define ISR_adc_measurement_adv_callback IRQ_Hdlr_16
 #ifndef VADC_QUEUE_GROUP_1_POSITION_0
 #define VADC_QUEUE_GROUP_1_POSITION_0 (0U)
+#else
+#error "Redefined the same Queue position. Please change the queue position to a different value in the UI editor of the APP"
+#endif
+
+#ifndef VADC_QUEUE_GROUP_1_POSITION_1
+#define VADC_QUEUE_GROUP_1_POSITION_1 (1U)
+#else
+#error "Redefined the same Queue position. Please change the queue position to a different value in the UI editor of the APP"
+#endif
+
+#ifndef VADC_QUEUE_GROUP_1_POSITION_2
+#define VADC_QUEUE_GROUP_1_POSITION_2 (2U)
+#else
+#error "Redefined the same Queue position. Please change the queue position to a different value in the UI editor of the APP"
+#endif
+
+#ifndef VADC_QUEUE_GROUP_1_POSITION_3
+#define VADC_QUEUE_GROUP_1_POSITION_3 (3U)
 #else
 #error "Redefined the same Queue position. Please change the queue position to a different value in the UI editor of the APP"
 #endif
