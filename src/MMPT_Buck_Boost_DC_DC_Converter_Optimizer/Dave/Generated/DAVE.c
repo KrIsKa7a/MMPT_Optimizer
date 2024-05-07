@@ -83,13 +83,8 @@ DAVE_STATUS_t DAVE_Init(void)
    } 
   if (init_status == DAVE_STATUS_SUCCESS)
   {
-	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_HS_Boost */
-	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_HS_Boost); 
-   } 
-  if (init_status == DAVE_STATUS_SUCCESS)
-  {
-	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_LS_Boost */
-	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_LS_Boost); 
+	 /**  Initialization of PWM_CCU8 APP instance PWM_CCU8_1 */
+	 init_status = (DAVE_STATUS_t)PWM_CCU8_Init(&PWM_CCU8_1); 
    }  
   return init_status;
 } /**  End of function DAVE_Init */

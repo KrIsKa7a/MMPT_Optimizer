@@ -66,5 +66,7 @@
 
     extern PWM_CCU8_t PWM_CCU8_0;
 
+    extern PWM_CCU8_t PWM_CCU8_1;
+
 #endif
 

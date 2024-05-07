@@ -46,10 +46,7 @@
     <resource xsi:type="ResourceModel:Port" href="HW_RESOURCES/Port2/Port2_2.dd#/"/>
   </nodes>
   <nodes xsi:type="ApplicationModel:AppNode">
-    <resource xsi:type="ResourceModel:App" href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_0.app#/"/>
-  </nodes>
-  <nodes xsi:type="ApplicationModel:AppNode">
-    <resource xsi:type="ResourceModel:App" href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_1.app#/"/>
+    <resource xsi:type="ResourceModel:App" href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#/"/>
   </nodes>
   <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.0" target="//@nodes.1"/>
   <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.2" target="//@nodes.0"/>
@@ -57,6 +54,7 @@
   <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.4" target="//@nodes.3"/>
   <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.6" target="//@nodes.5"/>
   <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.4" target="//@nodes.5"/>
+  <connections xsi:type="ApplicationModel:NodeConnection" source="//@nodes.15" target="//@nodes.0"/>
   <hwConnections href="APPS/CLOCK_XMC1/v4_0_18/CLOCK_XMC1_0.app#//@connections.0"/>
   <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_0.app#//@connections.0"/>
   <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_0.app#//@connections.8"/>
@@ -187,9 +185,16 @@
   <hwConnections href="APPS/ADC_MEASUREMENT_ADV/v4_0_14/ADC_MEASUREMENT_ADV_0.app#//@connections.142"/>
   <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_0.app#//@connections.16"/>
   <hwConnections href="APPS/ADC_MEASUREMENT_ADV/v4_0_14/ADC_MEASUREMENT_ADV_0.app#//@connections.170"/>
-  <hwConnections href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_0.app#//@connections.0"/>
-  <hwConnections href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_0.app#//@connections.1"/>
-  <hwConnections href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_1.app#//@connections.0"/>
-  <hwConnections href="APPS/DIGITAL_IO/v4_0_18/DIGITAL_IO_1.app#//@connections.1"/>
   <hwConnections href="APPS/ADC_MEASUREMENT_ADV/v4_0_14/ADC_MEASUREMENT_ADV_0.app#//@connections.169"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.0"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.8"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.9"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.10"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.11"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.12"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.13"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.14"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.15"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.4"/>
+  <hwConnections href="APPS/PWM_CCU8/v4_1_24/PWM_CCU8_1.app#//@connections.5"/>
 </ApplicationModel:ApplicationData>

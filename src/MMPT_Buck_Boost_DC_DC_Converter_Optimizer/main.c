@@ -192,6 +192,8 @@ int main(void)
 
   /* Start PWM */
   PWM_CCU8_Start(&PWM_CCU8_0);
+  PWM_CCU8_Start(&PWM_CCU8_1);
+
   while(1U)
   {
 
