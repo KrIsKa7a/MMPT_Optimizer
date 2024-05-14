@@ -112,8 +112,29 @@
 #define PWM_PERIOD   PWM_CCU8_0.config_ptr->period_value
 #define TRIGGER_ADC  PWM_PERIOD
 
+/* VADC voltage transfer function */
+#define mGET_ADC_VALUE_BY_INPUT_VOLTAGE(voltage) \
+	(voltage * 0.025 * 4096) / 3.3
+#define mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltage) \
+	(voltage * 0.0313 * 4096) / 3.3
+
+/* Voltage limits */
+#define MIN_INPUT_VOLTAGE	(15U)
+#define MAX_INPUT_VOLTAGE	(60U)
+#define MAX_OUTPUT_VOLTAGE	(60U)
+
+#define VOLTAGE_REF			(20U)
+
+typedef enum ConverterMode_t
+{
+	Buck = 0,
+	Boost = 1,
+	Buck_Boost = 2,
+} ConverterMode;
+
 /* Definition of the structure to store the filter paremeters*/
 XMC_3P3Z_DATA_FIXED_t ctrlFixed;
+static ConverterMode u8ConverterModeL = Buck;
 
 /**
  * @brief     ADC conversion complete interrupt handler.
@@ -141,21 +162,79 @@ void ISR_voltage_control_loop()
   /* Applying the filter to the ADC measured value */
   XMC_3P3Z_FilterFixed(&ctrlFixed);
 
-  /* Updating the compare value 1 of the CCU8 */
-  PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+  if (Buck == u8ConverterModeL)
+  {
+	    /* Updating the compare value 1 of the CCU8 */
+	    PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
-  /* Enabling shadow transfer */
-  PWM_CCU8_0.ccu8_module_ptr->GCSS= 0x1;
+	    /* Enabling shadow transfer */
+	    PWM_CCU8_0.ccu8_module_ptr->GCSS= 0x1;
+    }
+    else if (Boost == u8ConverterModeL)
+    {
+	    /* Updating the compare value 1 of the CCU8 */
+	    PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
-  volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
-  volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+	    /* Enabling shadow transfer */
+	    PWM_CCU8_1.ccu8_module_ptr->GCSS= 0x1;
+    }
 
+    volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+    volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+
+  	// Perform overvoltage protection
+  	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MAX_INPUT_VOLTAGE) <= u16VinResultL)
+  	{
+  		// Stop Buck PWM
+  		PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
+  	}
+
+  	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MAX_OUTPUT_VOLTAGE) <= u16VoutResultL)
+  	{
+  		// Stop Boost PWM - The HD Boost is connected to inverted channel which has LOW level before CMPR match
+  		PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xFFFF;
+  	}
+
+  	// Mode selection
+  	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) <= u16VinResultL)
+  	{
+  		u8ConverterModeL = Buck;
+  	}
+  	else
+  	{
+  		u8ConverterModeL = Boost;
+  	}
 }
 
-void ISR_adc_measurement_adv_callback()
+/*void ISR_adc_measurement_adv_callback()
 {
+	// Get the input/output voltages from the ADC
+	volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
 
-}
+	// Perform overvoltage protection
+	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MAX_INPUT_VOLTAGE) <= u16VinResultL)
+	{
+		// Stop Buck PWM
+		PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
+	}
+
+	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MAX_OUTPUT_VOLTAGE) <= u16VoutResultL)
+	{
+		// Stop Boost PWM - The HD Boost is connected to inverted channel which has LOW level before CMPR match
+		PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xFFFF;
+	}
+
+	// Mode selection
+	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) <= u16VinResultL)
+	{
+		u8ConverterModeL = Buck;
+	}
+	else
+	{
+		u8ConverterModeL = Boost;
+	}
+}*/
 
 /**
 
