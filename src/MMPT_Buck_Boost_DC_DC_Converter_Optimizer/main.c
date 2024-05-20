@@ -187,10 +187,10 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_1.ccu8_module_ptr->GCSS= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_0.ccu8_module_ptr->GCSS= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
 		}
 		else if (Boost == u8ConverterModeL)
 		{
@@ -201,10 +201,10 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_0.ccu8_module_ptr->GCSS= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_1.ccu8_module_ptr->GCSS= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
 		}
     }
 
