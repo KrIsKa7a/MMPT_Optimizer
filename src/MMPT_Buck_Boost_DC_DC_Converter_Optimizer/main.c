@@ -239,7 +239,10 @@ void ISR_voltage_control_loop()
 		}
 		else
 		{
-			u8ConverterModeL ^= 0x1;
+			//u8ConverterModeL ^= 0x1;
+			u8ConverterModeL = Buck_Boost;
+			PWM_CCU8_Stop(&PWM_CCU8_0);
+			PWM_CCU8_Stop(&PWM_CCU8_1);
 		}
   	}
 }
