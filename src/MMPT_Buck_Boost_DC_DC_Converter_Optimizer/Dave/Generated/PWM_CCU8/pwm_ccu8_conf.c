@@ -189,7 +189,7 @@
             {
                 .start_control                       = false,      
                 .period_value                        = 319U,
-                .compare1_value                      = 32U,
+                .compare1_value                      = 0U,
                 .compare2_value                      = 159U,
 
                 .int_per_match                       = false,
@@ -295,7 +295,7 @@
                 .prescaler_shadow_txfr_msk           = (uint32_t)XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0,
 
                 .state                               = PWM_CCU8_STATE_UNINITIALIZED,
-                .sym_duty1                           = 9000U,
+                .sym_duty1                           = 10000U,
                 .sym_duty2                           = 5031U,
                 .asym_duty                           = 0U,
                 .asym_shift                          = 0U,
@@ -429,7 +429,7 @@
             {
                 .start_control                       = false,      
                 .period_value                        = 319U,
-                .compare1_value                      = 32U,
+                .compare1_value                      = 320U,
                 .compare2_value                      = 159U,
 
                 .int_per_match                       = false,
@@ -535,7 +535,7 @@
                 .prescaler_shadow_txfr_msk           = (uint32_t)XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_1,
 
                 .state                               = PWM_CCU8_STATE_UNINITIALIZED,
-                .sym_duty1                           = 9000U,
+                .sym_duty1                           = 0U,
                 .sym_duty2                           = 5031U,
                 .asym_duty                           = 0U,
                 .asym_shift                          = 0U,

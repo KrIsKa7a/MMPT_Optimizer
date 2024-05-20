@@ -177,15 +177,24 @@ __STATIC_INLINE void XMC_3P3Z_FilterFixed( XMC_3P3Z_DATA_FIXED_t* ptr )
     int32_t acc;
 
     // acc (iq9.22) = An (iq-1.19) * Un (iq(8.8)
-    acc  = ptr->m_A[3]*ptr->m_U[2]; ptr->m_U[2] = ptr->m_U[1];
-    acc += ptr->m_A[2]*ptr->m_U[1]; ptr->m_U[1] = ptr->m_U[0];
+    acc  = ptr->m_A[3]*ptr->m_U[2];
+    ptr->m_U[2] = ptr->m_U[1];
+
+    acc += ptr->m_A[2]*ptr->m_U[1];
+    ptr->m_U[1] = ptr->m_U[0];
+
     acc += ptr->m_A[1]*ptr->m_U[0];
     acc = acc >> ptr->m_AShift;  //iq is now iq9.19
 
     // acc (iq12.19) = Bn (iq1.14) * En (iq(12.0)
-    acc += ptr->m_B[3]*ptr->m_E[2]; ptr->m_E[2] = ptr->m_E[1];
-    acc += ptr->m_B[2]*ptr->m_E[1]; ptr->m_E[1] = ptr->m_E[0];
-    acc += ptr->m_B[1]*ptr->m_E[0]; ptr->m_E[0] = ptr->m_Ref-((uint16_t)*ptr->m_pFeedBack);
+    acc += ptr->m_B[3]*ptr->m_E[2];
+    ptr->m_E[2] = ptr->m_E[1];
+
+    acc += ptr->m_B[2]*ptr->m_E[1];
+    ptr->m_E[1] = ptr->m_E[0];
+
+    acc += ptr->m_B[1]*ptr->m_E[0];
+    ptr->m_E[0] = ptr->m_Ref-((uint16_t)*ptr->m_pFeedBack);
     acc += ptr->m_B[0]*ptr->m_E[0];
 
     //our number is now a iq12.19, but we need to store U as a iq8.8
