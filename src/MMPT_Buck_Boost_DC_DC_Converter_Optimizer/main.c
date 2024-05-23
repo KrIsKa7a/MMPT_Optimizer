@@ -55,6 +55,9 @@
 #include <DAVE.h>
 #include "xmc_3p3z_filter_fixed.h"
 
+#define cFalse	(0 != 0)
+#define cTrue  	(0 == 0)
+
 /******************************************************************************************
  * These are the raw float values for the filter coefficients,
  * VADC reference and maximum and minimum values desired for the PWM duty cycle
@@ -122,6 +125,8 @@
 	(voltage * 0.025 * 4096) / 3.3
 #define mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltage) \
 	(voltage * 0.0313 * 4096) / 3.3
+#define mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE_PROTO(voltage) \
+	(voltage * 0.0306 * 4096) / 3.3
 
 /* Voltage limits */
 #define MIN_INPUT_VOLTAGE	(15U)
@@ -144,6 +149,38 @@ static ConverterMode u8ConverterModeL = Buck;
 static uint32_t u32StartUpCnt = 0;
 //static uint32_t u32PwmDutyCycle = 0;
 //static uint32_t u32ComplementaryBridgePwmDutyCycle = 0x140;
+
+void TIMER_Interval_Passed_IRQ(void)
+{
+	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+
+	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) <= (u16VinResultL - mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
+	{
+		u8ConverterModeL = Buck;
+	}
+	else if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) >= (u16VinResultL + mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
+	{
+		u8ConverterModeL = Boost;
+	}
+	else
+	{
+		//u8ConverterModeL ^= 0x1;
+		u8ConverterModeL = Buck_Boost;
+		//PWM_CCU8_Stop(&PWM_CCU8_0);
+		//PWM_CCU8_Stop(&PWM_CCU8_1);
+	}
+
+	TIMER_Stop(&TIMER_0);
+	TIMER_Clear(&TIMER_0);
+	TIMER_ClearEvent(&TIMER_0);
+}
+
+void MPPT_Algorithm_IRQ(void)
+{
+	TIMER_Stop(&TIMER_1);
+	TIMER_Clear(&TIMER_1);
+	TIMER_ClearEvent(&TIMER_1);
+}
 
 /**
  * @brief     ADC conversion complete interrupt handler.
@@ -178,13 +215,41 @@ void ISR_voltage_control_loop()
   }
   else
   {
-	  if (Buck == u8ConverterModeL)
-	  {
+	    if (cFalse == TIMER_GetTimerStatus(&TIMER_0))
+	    {
+	    	TIMER_Start(&TIMER_0);
+	    	DIGITAL_IO_SetOutputHigh(&DIGITAL_IO_0);
+	    }
+	    else
+	    {
+	    	  if (cFalse != TIMER_GetInterruptStatus(&TIMER_0))
+			  {
+				  TIMER_Interval_Passed_IRQ();
+				  DIGITAL_IO_SetOutputLow(&DIGITAL_IO_0);
+			  }
+	    }
+
+	    if (cFalse == TIMER_GetTimerStatus(&TIMER_1))
+	    {
+	    	TIMER_Start(&TIMER_1);
+	    	DIGITAL_IO_SetOutputHigh(&DIGITAL_IO_1);
+	    }
+	    else
+	    {
+	    	  if (cFalse != TIMER_GetInterruptStatus(&TIMER_1))
+			  {
+	    		  MPPT_Algorithm_IRQ();
+	    		  DIGITAL_IO_SetOutputLow(&DIGITAL_IO_1);
+			  }
+	    }
+
+	    if (Buck == u8ConverterModeL)
+	    {
 			/* Updating the compare value 1 of the CCU8 */
 			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x00;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0xA0;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
@@ -198,7 +263,22 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+		}
+		else if (Buck_Boost == u8ConverterModeL)
+		{
+			// Transfer power directly to the output
+			/* Updating the compare value 1 of the CCU8 */
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
+
+			/* Updating the compare value 1 of the CCU8 */
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
@@ -226,6 +306,7 @@ void ISR_voltage_control_loop()
   		//PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x13F;
   	}
 
+  	/*
   	if (PWM_START_UP_DELAY_CNT < u32StartUpCnt)
   	{
 		// Mode selection
@@ -241,10 +322,10 @@ void ISR_voltage_control_loop()
 		{
 			//u8ConverterModeL ^= 0x1;
 			u8ConverterModeL = Buck_Boost;
-			PWM_CCU8_Stop(&PWM_CCU8_0);
-			PWM_CCU8_Stop(&PWM_CCU8_1);
+			//PWM_CCU8_Stop(&PWM_CCU8_0);
+			//PWM_CCU8_Stop(&PWM_CCU8_1);
 		}
-  	}
+  	}*/
 }
 
 /**

@@ -69,6 +69,15 @@
 
 #include "INTERRUPT/interrupt.h"
   
+
+#include "GLOBAL_CCU4/global_ccu4.h"
+  
+
+#include "TIMER/timer.h"
+  
+
+#include "DIGITAL_IO/digital_io.h"
+  
 	
 
 /**********************************************************************************************************************

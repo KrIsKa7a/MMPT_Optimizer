@@ -52,5 +52,10 @@
     <upwardMapList xsi:type="ResourceModel:HWResource" href="../../APPS/CLOCK_XMC1/v4_0_18/CLOCK_XMC1_0.app#//@hwResources.0"/>
     <resourcesList name="clkout" requiredResourceUri="http://resources/132.0.1/peripheral/scu/0/dco2_clkout"/>
   </provided>
+  <provided xsi:type="ResourceModel:ResourceGroup" name="0" URI="http://resources/132.0.1/peripheral/scu/0/gcu/ccu4_global_enable/0">
+    <upwardMapList xsi:type="ResourceModel:HWResource" href="../../APPS/GLOBAL_CCU4/v4_1_14/GLOBAL_CCU4_0.app#//@hwResources.1"/>
+    <resourcesList name="ccucon_gsc" requiredResourceUri="http://resources/132.0.1/peripheral/scu/0/ccucon/gsc40"/>
+    <resourcesList name="gsc_enable" requiredResourceUri="http://resources/132.0.1/peripheral/scu/0/ccucon_gsc40_enable"/>
+  </provided>
   <addressBlock offset="0x0" size="0x100" usage="registers"/>
 </ResourceModel:Peripheral>
