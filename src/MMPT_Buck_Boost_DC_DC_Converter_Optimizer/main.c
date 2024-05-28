@@ -180,6 +180,11 @@ void IncreaseVoltageRef()
 	// Voltage ref is the input voltage
 	// TODO: Implement variable step
 	voltageRef += mGET_ADC_VALUE_BY_INPUT_VOLTAGE(0.1);
+
+	if (voltageRef > mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MAX_INPUT_VOLTAGE))
+	{
+		voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MAX_INPUT_VOLTAGE);
+	}
 }
 
 void DecreaseVoltageRef()
@@ -187,6 +192,11 @@ void DecreaseVoltageRef()
 	// Voltage ref is the input voltage
 	// TODO: Implement variable step
 	voltageRef -= mGET_ADC_VALUE_BY_INPUT_VOLTAGE(0.1);
+
+	if (voltageRef < mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MIN_INPUT_VOLTAGE))
+	{
+		voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MIN_INPUT_VOLTAGE);
+	}
 }
 
 void Mode_Selection_IRQ(void)
@@ -251,6 +261,7 @@ void MPPT_Algorithm_IRQ(void)
 		uint16_t dv = u16VinResultL - u16Vin_K_Last;
 		uint16_t di = u16IinResultL - u16Iin_K_Last;
 		uint16_t slopeDiffValue = u16IinResultL + (u16VinResultL * (di / dv));
+
 		if (slopeDiffValue > 0)
 		{
 			IncreaseVoltageRef();
@@ -341,21 +352,7 @@ void ISR_voltage_control_loop()
 	    {
 	    	// Since the converter is operating in reversed mode -> PWM_CCU8_1 will be the buck and PWM_CCU8_O will be the boost
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
-
-			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
-
-			/* Enabling shadow transfer */
-			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
-
-			/* Enabling shadow transfer */
-			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
-		}
-		else if (Boost == u8ConverterModeL)
-		{
-			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x140;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x00;
 
 			/* Updating the compare value 1 of the CCU8 */
 			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
@@ -365,6 +362,20 @@ void ISR_voltage_control_loop()
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+		}
+		else if (Boost == u8ConverterModeL)
+		{
+			/* Updating the compare value 1 of the CCU8 */
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
+
+			/* Updating the compare value 1 of the CCU8 */
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
 		}
 		else if (Buck_Boost == u8ConverterModeL)
 		{

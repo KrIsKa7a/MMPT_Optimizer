@@ -76,7 +76,7 @@ typedef struct XMC_3P3Z_DATA_FIXED
   int32_t             m_KpwmMin;
   int32_t             m_KpwmMax;
   int32_t             m_KpwmMaxNeg;
-  uint16_t*            m_Ref;        /**< ADC reference */
+  uint16_t*           m_Ref;        /**< ADC reference */
   int32_t             m_B[4];
   int32_t             m_A[4];
   int32_t             m_E[4];

@@ -86,13 +86,13 @@
         
               .asymmetric_pwm        = 0U,
 #if !defined(CCU8V3)         
-              .invert_out0           = 0U,
-              .invert_out1           = 1U,
+              .invert_out0           = 1U,
+              .invert_out1           = 0U,
               .invert_out2           = 1U,
               .invert_out3           = 0U,
 #else                     
-              .selector_out0         = XMC_CCU8_SOURCE_OUT0_ST1,
-              .selector_out1         = XMC_CCU8_SOURCE_OUT1_INV_ST1,
+              .selector_out0         = XMC_CCU8_SOURCE_OUT0_INV_ST1,
+              .selector_out1         = XMC_CCU8_SOURCE_OUT1_ST1,
               .selector_out2         = XMC_CCU8_SOURCE_OUT2_INV_ST2,
               .selector_out3         = XMC_CCU8_SOURCE_OUT3_ST2,
 #endif
@@ -326,13 +326,13 @@
         
               .asymmetric_pwm        = 0U,
 #if !defined(CCU8V3)         
-              .invert_out0           = 0U,
-              .invert_out1           = 1U,
+              .invert_out0           = 1U,
+              .invert_out1           = 0U,
               .invert_out2           = 0U,
               .invert_out3           = 1U,
 #else                     
-              .selector_out0         = XMC_CCU8_SOURCE_OUT0_ST1,
-              .selector_out1         = XMC_CCU8_SOURCE_OUT1_INV_ST1,
+              .selector_out0         = XMC_CCU8_SOURCE_OUT0_INV_ST1,
+              .selector_out1         = XMC_CCU8_SOURCE_OUT1_ST1,
               .selector_out2         = XMC_CCU8_SOURCE_OUT2_ST2,
               .selector_out3         = XMC_CCU8_SOURCE_OUT3_INV_ST2,
 #endif
