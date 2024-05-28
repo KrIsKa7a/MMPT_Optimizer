@@ -76,7 +76,7 @@ typedef struct XMC_3P3Z_DATA_FIXED
   int32_t             m_KpwmMin;
   int32_t             m_KpwmMax;
   int32_t             m_KpwmMaxNeg;
-  int32_t*            m_Ref;        /**< ADC reference */
+  uint16_t*            m_Ref;        /**< ADC reference */
   int32_t             m_B[4];
   int32_t             m_A[4];
   int32_t             m_E[4];
@@ -113,7 +113,7 @@ typedef struct XMC_3P3Z_DATA_FIXED
  */
 __STATIC_INLINE void XMC_3P3Z_InitFixed(XMC_3P3Z_DATA_FIXED_t* ptr, float cB0, float cB1, float cB2,
                                         float cB3, float cA1, float cA2, float cA3, float cK,
-                                        uint16_t ref, uint16_t pwmMin, uint16_t pwmMax,
+                                        uint16_t* ref, uint16_t pwmMin, uint16_t pwmMax,
                                         volatile uint32_t* pFeedBack)
 {
   int A_iq, B_iq, U_iq;
@@ -124,7 +124,7 @@ __STATIC_INLINE void XMC_3P3Z_InitFixed(XMC_3P3Z_DATA_FIXED_t* ptr, float cB0, f
 
   /* Initializing Feedback, reference, and OUT values Out  */
   ptr->m_pFeedBack  = pFeedBack;
-  *(ptr->m_Ref)    = ref;
+  ptr->m_Ref    = ref;
   ptr->m_pOut   = 0;
 
   //          IQ int      iQ fract    Bit size

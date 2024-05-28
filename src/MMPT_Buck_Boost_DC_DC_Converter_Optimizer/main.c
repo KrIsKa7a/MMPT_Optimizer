@@ -164,7 +164,6 @@ static uint32_t u32StartUpCnt = 0;
 static uint16_t u16Vin_K_Last = 0;
 static uint16_t u16Iin_K_Last = 0;
 static uint16_t voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(50);
-static DC_BOOL bIsMPPTStartUp = cTrue;
 
 uint16_t AbsoluteValue(uint16_t x)
 {
@@ -214,7 +213,7 @@ void Mode_Selection_IRQ(void)
 		//PWM_CCU8_Stop(&PWM_CCU8_1);
 	}
 
-	u16_Vin_K_Last = u16VinResultL;
+	u16Vin_K_Last = u16VinResultL;
 	u16Iin_K_Last = u16IinResultL;
 
 	TIMER_Clear(&TIMER_0);
@@ -229,7 +228,7 @@ void MPPT_Algorithm_IRQ(void)
 	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
 	volatile uint16_t u16IinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Iin);
 
-	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(V_OUT_ESPILON) >= AbsoluteValue(u16VinResultL - u16Vin_K_Last))
+	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(V_OUT_EPSILON) >= AbsoluteValue(u16VinResultL - u16Vin_K_Last))
 	{
 		// dV = 0 -> Switch to current control
 		if (mGET_ADC_VALUE_BY_CURRENT(I_IN_EPSILON) <= AbsoluteValue(u16IinResultL - u16Iin_K_Last))
@@ -345,7 +344,7 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed->m_pOut;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
@@ -359,7 +358,7 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x140;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed->m_pOut;
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
