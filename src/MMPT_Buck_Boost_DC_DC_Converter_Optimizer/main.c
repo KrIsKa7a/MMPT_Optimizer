@@ -57,6 +57,7 @@
 
 #define cFalse	(0 != 0)
 #define cTrue  	(0 == 0)
+typedef uint8_t DC_BOOL;
 
 /******************************************************************************************
  * These are the raw float values for the filter coefficients,
@@ -117,16 +118,27 @@
 #define TRIGGER_ADC  						PWM_PERIOD
 #define PWM_CCU8_0_SHADOW_TRANSFER_ENABLE	(0x1)
 #define PWM_CCU8_1_SHADOW_TRANSFER_ENABLE	(0x10)
+#define DUTY_CYCLE_STEP						(0.01)
 
 #define PWM_START_UP_DELAY_CNT				(100000U)
 
 /* VADC voltage transfer function */
 #define mGET_ADC_VALUE_BY_INPUT_VOLTAGE(voltage) \
 	(voltage * 0.025 * 4096) / 3.3
+#define mGET_INPUT_VOLTAGE_BY_ADC_VALUE(d) \
+	(3.3 * d) / (0.025 * 4096)
 #define mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltage) \
 	(voltage * 0.0313 * 4096) / 3.3
+#define mGET_OUTPUT_VOLTAGE_BY_ADC_VALUE \
+	(3.3 * d) / (0.0313 * 4096)
 #define mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE_PROTO(voltage) \
 	(voltage * 0.0306 * 4096) / 3.3
+#define mGET_OUTPUT_VOLTAGE_BY_ADC_VALUE_PROTO(d) \
+	(3.3 * d) / (0.0306 * 4096)
+#define mGET_ADC_VALUE_BY_CURRENT(current) \
+	(4096 * (0.25 * current + 1.65)) / 3.3
+#define mGET_CURRENT_BY_ADC_VALUE(d) \
+	((3.3 * d / 4096) - 1.65) / 0.25
 
 /* Voltage limits */
 #define MIN_INPUT_VOLTAGE	(15U)
@@ -135,6 +147,8 @@
 
 #define VOLTAGE_REF			(20U)
 #define MODE_HYSTERESYS		(2U)
+#define V_OUT_EPSILON		(0.1)
+#define I_IN_EPSILON		(0.01)
 
 typedef enum ConverterMode_t
 {
@@ -147,18 +161,48 @@ typedef enum ConverterMode_t
 XMC_3P3Z_DATA_FIXED_t ctrlFixed;
 static ConverterMode u8ConverterModeL = Buck;
 static uint32_t u32StartUpCnt = 0;
-//static uint32_t u32PwmDutyCycle = 0;
-//static uint32_t u32ComplementaryBridgePwmDutyCycle = 0x140;
+static uint16_t u16Vin_K_Last = 0;
+static uint16_t u16Iin_K_Last = 0;
+static uint16_t voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(50);
+static DC_BOOL bIsMPPTStartUp = cTrue;
 
-void TIMER_Interval_Passed_IRQ(void)
+uint16_t AbsoluteValue(uint16_t x)
 {
-	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+	if (x < 0)
+	{
+		return x * -1;
+	}
 
-	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) <= (u16VinResultL - mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
+	return x;
+}
+
+void IncreaseVoltageRef()
+{
+	// Voltage ref is the input voltage
+	// TODO: Implement variable step
+	voltageRef += mGET_ADC_VALUE_BY_INPUT_VOLTAGE(0.1);
+}
+
+void DecreaseVoltageRef()
+{
+	// Voltage ref is the input voltage
+	// TODO: Implement variable step
+	voltageRef -= mGET_ADC_VALUE_BY_INPUT_VOLTAGE(0.1);
+}
+
+void Mode_Selection_IRQ(void)
+{
+	TIMER_Stop(&TIMER_0);
+
+	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+	volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+	volatile uint16_t u16IinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Iin);
+
+	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) <= (u16VoutResultL - mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
 		u8ConverterModeL = Buck;
 	}
-	else if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) >= (u16VinResultL + mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
+	else if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) >= (u16VoutResultL + mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
 		u8ConverterModeL = Boost;
 	}
@@ -170,7 +214,9 @@ void TIMER_Interval_Passed_IRQ(void)
 		//PWM_CCU8_Stop(&PWM_CCU8_1);
 	}
 
-	TIMER_Stop(&TIMER_0);
+	u16_Vin_K_Last = u16VinResultL;
+	u16Iin_K_Last = u16IinResultL;
+
 	TIMER_Clear(&TIMER_0);
 	TIMER_ClearEvent(&TIMER_0);
 }
@@ -178,6 +224,59 @@ void TIMER_Interval_Passed_IRQ(void)
 void MPPT_Algorithm_IRQ(void)
 {
 	TIMER_Stop(&TIMER_1);
+
+	// Here we assume that we have last value of the Vin, Iin because they are measured every 5ms and we are 1s after startup here
+	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+	volatile uint16_t u16IinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Iin);
+
+	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(V_OUT_ESPILON) >= AbsoluteValue(u16VinResultL - u16Vin_K_Last))
+	{
+		// dV = 0 -> Switch to current control
+		if (mGET_ADC_VALUE_BY_CURRENT(I_IN_EPSILON) <= AbsoluteValue(u16IinResultL - u16Iin_K_Last))
+		{
+			// dI != 0
+			if (u16IinResultL - u16Iin_K_Last > 0)
+			{
+				DecreaseVoltageRef();
+			}
+			else
+			{
+				IncreaseVoltageRef();
+			}
+		}
+	}
+	else
+	{
+		// dV != 0
+		// Check the slope
+		uint16_t dv = u16VinResultL - u16Vin_K_Last;
+		uint16_t di = u16IinResultL - u16Iin_K_Last;
+		uint16_t slopeDiffValue = u16IinResultL + (u16VinResultL * (di / dv));
+		if (slopeDiffValue > 0)
+		{
+			IncreaseVoltageRef();
+		}
+		else if (slopeDiffValue < 0)
+		{
+			if (di * dv > 0)
+			{
+				if (dv > 0)
+				{
+					// dv is positive
+					IncreaseVoltageRef();
+				}
+				else
+				{
+					DecreaseVoltageRef();
+				}
+			}
+			else
+			{
+				DecreaseVoltageRef();
+			}
+		}
+	}
+
 	TIMER_Clear(&TIMER_1);
 	TIMER_ClearEvent(&TIMER_1);
 }
@@ -218,73 +317,70 @@ void ISR_voltage_control_loop()
 	    if (cFalse == TIMER_GetTimerStatus(&TIMER_0))
 	    {
 	    	TIMER_Start(&TIMER_0);
-	    	DIGITAL_IO_SetOutputHigh(&DIGITAL_IO_0);
 	    }
 	    else
 	    {
 	    	  if (cFalse != TIMER_GetInterruptStatus(&TIMER_0))
 			  {
-				  TIMER_Interval_Passed_IRQ();
-				  DIGITAL_IO_SetOutputLow(&DIGITAL_IO_0);
+				  Mode_Selection_IRQ();
 			  }
 	    }
 
 	    if (cFalse == TIMER_GetTimerStatus(&TIMER_1))
 	    {
 	    	TIMER_Start(&TIMER_1);
-	    	DIGITAL_IO_SetOutputHigh(&DIGITAL_IO_1);
 	    }
 	    else
 	    {
 	    	  if (cFalse != TIMER_GetInterruptStatus(&TIMER_1))
 			  {
 	    		  MPPT_Algorithm_IRQ();
-	    		  DIGITAL_IO_SetOutputLow(&DIGITAL_IO_1);
 			  }
 	    }
 
 	    if (Buck == u8ConverterModeL)
 	    {
+	    	// Since the converter is operating in reversed mode -> PWM_CCU8_1 will be the buck and PWM_CCU8_O will be the boost
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x00;
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0xA0;
-
-			/* Enabling shadow transfer */
-			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed->m_pOut;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
 		}
 		else if (Boost == u8ConverterModeL)
 		{
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x140;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
-
-			/* Enabling shadow transfer */
-			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed->m_pOut;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+
+			/* Enabling shadow transfer */
+			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
 		}
 		else if (Buck_Boost == u8ConverterModeL)
 		{
 			// Transfer power directly to the output
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
+			//PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
+			//PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
+			//PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
 
 			/* Enabling shadow transfer */
-			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
+			//PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
 		}
     }
 
@@ -296,36 +392,13 @@ void ISR_voltage_control_loop()
   	{
   		// Stop Buck PWM
   		PWM_CCU8_Stop(&PWM_CCU8_0);
-  		//PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x00;
   	}
 
   	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MAX_OUTPUT_VOLTAGE) <= u16VoutResultL)
   	{
   		// Stop Boost PWM - The HD Boost is connected to inverted channel which has LOW level before CMPR match
   		PWM_CCU8_Stop(&PWM_CCU8_1);
-  		//PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x13F;
   	}
-
-  	/*
-  	if (PWM_START_UP_DELAY_CNT < u32StartUpCnt)
-  	{
-		// Mode selection
-		if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) <= (u16VinResultL - mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
-		{
-			u8ConverterModeL = Buck;
-		}
-		else if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(VOLTAGE_REF) >= (u16VinResultL + mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MODE_HYSTERESYS)))
-		{
-			u8ConverterModeL = Boost;
-		}
-		else
-		{
-			//u8ConverterModeL ^= 0x1;
-			u8ConverterModeL = Buck_Boost;
-			//PWM_CCU8_Stop(&PWM_CCU8_0);
-			//PWM_CCU8_Stop(&PWM_CCU8_1);
-		}
-  	}*/
 }
 
 /**
@@ -354,8 +427,8 @@ int main(void)
     }
   }
   /* Filter structure initialization */
-  XMC_3P3Z_InitFixed(&ctrlFixed,B0,B1,B2,B3,A1,A2,A3,K,REF,DUTY_TICKS_MIN,DUTY_TICKS_MAX,
-		             &VADC_G1->RES[ADC_MEASUREMENT_ADV_0_Vout_handle.ch_handle->result_reg_number]);
+  XMC_3P3Z_InitFixed(&ctrlFixed,B0,B1,B2,B3,A1,A2,A3,K,&voltageRef,DUTY_TICKS_MIN,DUTY_TICKS_MAX,
+		             &VADC_G1->RES[ADC_MEASUREMENT_ADV_0_Vin_handle.ch_handle->result_reg_number]);
 
   /* ADC trigger signal setting */
   XMC_CCU8_SLICE_SetTimerCompareMatchChannel2(PWM_CCU8_0.ccu8_slice_ptr,TRIGGER_ADC);

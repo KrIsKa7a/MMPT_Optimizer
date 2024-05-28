@@ -76,7 +76,7 @@ typedef struct XMC_3P3Z_DATA_FIXED
   int32_t             m_KpwmMin;
   int32_t             m_KpwmMax;
   int32_t             m_KpwmMaxNeg;
-  int32_t             m_Ref;        /**< ADC reference */
+  int32_t*            m_Ref;        /**< ADC reference */
   int32_t             m_B[4];
   int32_t             m_A[4];
   int32_t             m_E[4];
@@ -124,7 +124,7 @@ __STATIC_INLINE void XMC_3P3Z_InitFixed(XMC_3P3Z_DATA_FIXED_t* ptr, float cB0, f
 
   /* Initializing Feedback, reference, and OUT values Out  */
   ptr->m_pFeedBack  = pFeedBack;
-  ptr->m_Ref    = ref;
+  *(ptr->m_Ref)    = ref;
   ptr->m_pOut   = 0;
 
   //          IQ int      iQ fract    Bit size
@@ -194,7 +194,7 @@ __STATIC_INLINE void XMC_3P3Z_FilterFixed( XMC_3P3Z_DATA_FIXED_t* ptr )
     ptr->m_E[1] = ptr->m_E[0];
 
     acc += ptr->m_B[1]*ptr->m_E[0];
-    ptr->m_E[0] = ptr->m_Ref-((uint16_t)*ptr->m_pFeedBack);
+    ptr->m_E[0] = *(ptr->m_Ref)-((uint16_t)*ptr->m_pFeedBack);
     acc += ptr->m_B[0]*ptr->m_E[0];
 
     //our number is now a iq12.19, but we need to store U as a iq8.8
