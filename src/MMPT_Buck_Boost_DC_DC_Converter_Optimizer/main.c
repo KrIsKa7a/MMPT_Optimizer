@@ -207,19 +207,16 @@ void Mode_Selection_IRQ(void)
 {
 	TIMER_Stop(&TIMER_0);
 
-	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
-	//volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
-	volatile uint16_t u16IinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Iin);
 	uint16_t u16VoutResultL = GetAverage(&sVoutEntries);
 	ClearEntries(&sVoutEntries);
 
-	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) <= (u16VoutResultL - mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
+	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) >= (u16VoutResultL + mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
-		//u8ConverterModeL = Buck;
+		u8ConverterModeL = Buck;
 	}
-	else if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) >= (u16VoutResultL + mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
+	else if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) <= (u16VoutResultL - mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
-		//u8ConverterModeL = Boost;
+		u8ConverterModeL = Boost;
 	}
 	else
 	{
@@ -228,9 +225,6 @@ void Mode_Selection_IRQ(void)
 		//PWM_CCU8_Stop(&PWM_CCU8_0);
 		//PWM_CCU8_Stop(&PWM_CCU8_1);
 	}
-
-	u16Vin_K_Last = u16VinResultL;
-	u16Iin_K_Last = u16IinResultL;
 
 	TIMER_Clear(&TIMER_0);
 	TIMER_ClearEvent(&TIMER_0);
@@ -293,6 +287,9 @@ void MPPT_Algorithm_IRQ(void)
 			}
 		}
 	}
+
+	u16Vin_K_Last = u16VinResultL;
+	u16Iin_K_Last = u16IinResultL;
 
 	TIMER_Clear(&TIMER_1);
 	TIMER_ClearEvent(&TIMER_1);
