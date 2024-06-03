@@ -54,6 +54,7 @@
 /*Including DAVE.h for generated code and xmc_3p3z_filter_fixed.h for the filter implementation */
 #include <DAVE.h>
 #include "xmc_3p3z_filter_fixed.h"
+#include "ring_buffer.h"
 
 #define cFalse	(0 != 0)
 #define cTrue  	(0 == 0)
@@ -159,11 +160,13 @@ typedef enum ConverterMode_t
 
 /* Definition of the structure to store the filter paremeters*/
 XMC_3P3Z_DATA_FIXED_t ctrlFixed;
-static ConverterMode u8ConverterModeL = Buck;
+static ConverterMode u8ConverterModeL = Boost;
 static uint32_t u32StartUpCnt = 0;
 static uint16_t u16Vin_K_Last = 0;
 static uint16_t u16Iin_K_Last = 0;
-static uint16_t voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(50);
+static uint16_t voltageRef = mGET_ADC_VALUE_BY_INPUT_VOLTAGE(30);
+
+static ADC_Entries sVoutEntries;
 
 uint16_t AbsoluteValue(uint16_t x)
 {
@@ -199,21 +202,24 @@ void DecreaseVoltageRef()
 	}
 }
 
+// 5ms
 void Mode_Selection_IRQ(void)
 {
 	TIMER_Stop(&TIMER_0);
 
 	volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
-	volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
+	//volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
 	volatile uint16_t u16IinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Iin);
+	uint16_t u16VoutResultL = GetAverage(&sVoutEntries);
+	ClearEntries(&sVoutEntries);
 
 	if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) <= (u16VoutResultL - mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
-		u8ConverterModeL = Buck;
+		//u8ConverterModeL = Buck;
 	}
 	else if (mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(voltageRef) >= (u16VoutResultL + mGET_ADC_VALUE_BY_OUTPUT_VOLTAGE(MODE_HYSTERESYS)))
 	{
-		u8ConverterModeL = Boost;
+		//u8ConverterModeL = Boost;
 	}
 	else
 	{
@@ -230,6 +236,7 @@ void Mode_Selection_IRQ(void)
 	TIMER_ClearEvent(&TIMER_0);
 }
 
+// 1s
 void MPPT_Algorithm_IRQ(void)
 {
 	TIMER_Stop(&TIMER_1);
@@ -344,7 +351,7 @@ void ISR_voltage_control_loop()
 	    {
 	    	  if (cFalse != TIMER_GetInterruptStatus(&TIMER_1))
 			  {
-	    		  MPPT_Algorithm_IRQ();
+	    		  //MPPT_Algorithm_IRQ();
 			  }
 	    }
 
@@ -355,7 +362,8 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0x00;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			//PWM_CCU8_0.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0xA0;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_1.ccu8_module_ptr->GCSS |= PWM_CCU8_1_SHADOW_TRANSFER_ENABLE;
@@ -369,7 +377,8 @@ void ISR_voltage_control_loop()
 			PWM_CCU8_0.ccu8_slice_ptr->CR1S = 0x140;
 
 			/* Updating the compare value 1 of the CCU8 */
-			PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			//PWM_CCU8_1.ccu8_slice_ptr->CR1S = ctrlFixed.m_pOut;
+			PWM_CCU8_1.ccu8_slice_ptr->CR1S = 0xA0;
 
 			/* Enabling shadow transfer */
 			PWM_CCU8_0.ccu8_module_ptr->GCSS |= PWM_CCU8_0_SHADOW_TRANSFER_ENABLE;
@@ -396,6 +405,7 @@ void ISR_voltage_control_loop()
 
     volatile uint16_t u16VoutResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vout);
     volatile uint16_t u16VinResultL = ADC_MEASUREMENT_ADV_GetResult(&ADC_MEASUREMENT_ADV_0_Vin);
+    AddEntry(&sVoutEntries, u16VoutResultL);
 
   	// Perform overvoltage protection
   	if (mGET_ADC_VALUE_BY_INPUT_VOLTAGE(MAX_INPUT_VOLTAGE) <= u16VinResultL)
@@ -439,6 +449,7 @@ int main(void)
   /* Filter structure initialization */
   XMC_3P3Z_InitFixed(&ctrlFixed,B0,B1,B2,B3,A1,A2,A3,K,&voltageRef,DUTY_TICKS_MIN,DUTY_TICKS_MAX,
 		             &VADC_G1->RES[ADC_MEASUREMENT_ADV_0_Vin_handle.ch_handle->result_reg_number]);
+  InitEntry(&sVoutEntries);
 
   /* ADC trigger signal setting */
   XMC_CCU8_SLICE_SetTimerCompareMatchChannel2(PWM_CCU8_0.ccu8_slice_ptr,TRIGGER_ADC);
