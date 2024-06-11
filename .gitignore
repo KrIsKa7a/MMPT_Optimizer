@@ -54,3 +54,5 @@ dkms.conf
 src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer/Readme.txt
 src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer/solver.log
 src/MMPT_Buck_Boost_DC_DC_Converter_Optimizer_Upgraded_0
+src/Boost_Converter
+src/DC_DC_Auto_Mode_Switching
